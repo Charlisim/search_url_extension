@@ -12,6 +12,7 @@ import urllib2
 from bs4 import BeautifulSoup
 import re
 import xerox
+from youtube import *
 
 class InvalidProtocol(Exception):
     def __init_(self, value):
@@ -25,17 +26,16 @@ class URLChecking:
         self.PROTOCOLS = ['ftp', 'smtp']
 
     def checkURL(self):
-        if not self.url.startswith('http://'):
+        if not (self.url.startswith('http://') or self.url.startswith('https://'))  :
             if self.url.startswith('www'):
                 self.url = 'http://' + self.url
                 return self.url                              
             for protocol in self.PROTOCOLS:
                 if self.url.startswith(protocol):
                     print 'Wrong protocol. Only accept http protocol'
-                    return False
+                    return False       
         else:
             return self.url
-                    
 
 
 class urlExtension:
@@ -51,8 +51,8 @@ class urlExtension:
 
     def getPage(self, url):
         ''' Hace la peticion a la URL '''        
-
-        req = urllib2.Request(url)     
+        
+        req = urllib2.Request(url)        
         try:            
             response = urllib2.urlopen(req)
             return response.read()
@@ -62,7 +62,10 @@ class urlExtension:
             
             
     def listOfExceptions (self, string):
-        webs = ['cs50.tv'] # all exceptions
+        webs = ['cs50.tv', '/descargar.php']
+        # webs[0] = CS50
+        # webs[1] = mejorenvo
+        # all exceptions
         if webs[0] in string:
             if '2012' in string:
                 string = re.sub('http://cs50.tv', 'http://downloads.cs50.net', string)
@@ -79,6 +82,8 @@ class urlExtension:
                                 # print href
                                 string = href  
                     except KeyError: pass
+        if webs[1] in string:                      
+            string = 'http://www.mejorenvo.com' + string;
         return string
         
     
@@ -91,8 +96,9 @@ class urlExtension:
             bsLink = BeautifulSoup(self.getPage(self.url))        
         except InvalidProtocol:
             print 'You must provide a valid protocol. Ej. HTTP'
-            while not url:
-                url = raw_input('Insert URL: ')
+            while not self.url:
+                self.url = raw_input('Insert URL: ')
+                bsLink = BeautifulSoup(self.getPage(self.url))
         allLinks = bsLink.findAll('a')
         # print allLinks
         for link in allLinks:
@@ -120,20 +126,14 @@ class urlExtension:
             print 'Links copied on clipboard'
             print self.linkList 
         except XclipNotFound:
-           print self.linkList 
+            print self.linkList 
 
-
-
-
-            
 class main():
     url = ''
     while not url:
         url = raw_input('Insert URL: ')
-        url = URLChecking(url).checkURL()
-
-
-
+        url = URLChecking(url).checkURL()        
+    
     extensions = raw_input('Insert search extensions (comma separated): ')
     extensions = re.split(',',extensions)
     # print extensions
