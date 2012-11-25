@@ -13,6 +13,8 @@ from bs4 import BeautifulSoup
 import re
 import xerox
 from youtube import *
+from synology import synology
+import base64
 
 class InvalidProtocol(Exception):
     def __init_(self, value):
@@ -40,11 +42,15 @@ class URLChecking:
 
 class urlExtension:
     
-    def __init__(self, url, extension, forbidden=[]):
+    def __init__(self, url, extension, forbidden=[], syn = 'N', syndata= dict()):
         self.url = url
         self.extension = extension
         self.forbidden = forbidden
         self.linkList = '' # list of links to Clipboard
+        self.commaList = '' # list of links to synlogoy
+        self.syn = {}
+        if syn == 'Y' and syndata:
+            self.syn = synology(syndata['ip'], syndata['username'], syndata['password'])
         print self.forbidden
 
 
@@ -82,13 +88,16 @@ class urlExtension:
                                 # print href
                                 string = href  
                     except KeyError: pass
-        if webs[1] in string:                      
-            string = 'http://www.mejorenvo.com' + string;
+        if webs[1] in string:
+            if 'mejorenvo.com' in self.url:                     
+                string = 'http://www.mejorenvo.com' + string;
         return string
         
     
-    def insertInList(self, string):        
-        self.linkList += '\n' + self.listOfExceptions(string)
+    def insertInList(self, string):
+        linkExcept =  self.listOfExceptions(string)
+        self.linkList += '\n' + linkExcept
+        self.commaList += ',' + linkExcept
         
         
     def searchLink(self):
@@ -121,15 +130,20 @@ class urlExtension:
                             # print href
                             self.insertInList(href)      
         
-        try:
-            xerox.copy(self.linkList)
-            print 'Links copied on clipboard'
-            print self.linkList 
-        except XclipNotFound:
-            print self.linkList 
+#        try:
+#            xerox.copy(self.linkList)
+#            print 'Links copied on clipboard'
+#            print self.linkList 
+#        except XclipNotFound:
+#            print self.linkList
+        
+        if self.syn:
+            self.syn.addDownload(self.commaList)
+
 
 class main():
     url = ''
+    synology = ''
     while not url:
         url = raw_input('Insert URL: ')
         url = URLChecking(url).checkURL()        
@@ -139,7 +153,16 @@ class main():
     # print extensions
     forbidden = raw_input('Insert forbidden keywords on URL (comma separated): ')
     forbidden = re.split(',', forbidden)
-    u = urlExtension(url,extensions, forbidden)
+    
+    synology = raw_input('Do you want to send links to synology: (Y/N) ')
+    if synology == 'Y':
+        ip = raw_input('Input URL of Synology DiskStation: ')
+        username = raw_input('Insert username of synology (You must have rights to DownloadStation): ')
+        password = base64.b64encode(raw_input('Input your password'))
+        syndata = {'ip': ip, 'username': username, 'password': password}
+        u = urlExtension(url,extensions, forbidden, synology, syndata)
+    else:
+        u = urlExtension(url,extensions, forbidden)
     u.searchLink()
     
 if __name__ == '__main__':
