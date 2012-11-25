@@ -60,10 +60,10 @@ class urlExtension:
         self.url = url
         self.extension = extension
         self.forbidden = forbidden
-        self.linkList = '' # list of links to Clipboard
-        self.commaList = '' # list of links to synlogoy
+        self.linkList = '' # list of links to Clipboard        
         self.syn = {}
         if syn == 'Y' and syndata:
+            self.commaList = '' # list of links to synlogoy
             self.syn = synology(syndata['ip'], syndata['username'], syndata['password'])
         print self.forbidden
 
@@ -110,8 +110,9 @@ class urlExtension:
     
     def insertInList(self, string):
         linkExcept =  self.listOfExceptions(string)
-        self.linkList += '\n' + linkExcept
-        self.commaList += ',' + linkExcept
+        self.linkList.append(linkExcept)
+        if self.commaList:
+            self.commaList.append(linkExcept)
         
         
     def searchLink(self):
