@@ -26,7 +26,6 @@ import urllib2
 from bs4 import BeautifulSoup
 import re
 import xerox
-from youtube import *
 from synology import synology
 import base64
 
@@ -62,10 +61,10 @@ class urlExtension:
         self.forbidden = forbidden
         self.linkList = '' # list of links to Clipboard        
         self.syn = {}
-        if syn == 'Y' and syndata:
-            self.commaList = '' # list of links to synlogoy
+        self.commaList = ''  # list of links to synlogoy
+        if (syn == 'Y' or syn == 'y') and syndata:            
             self.syn = synology(syndata['ip'], syndata['username'], syndata['password'])
-        print self.forbidden
+
 
 
 
@@ -98,8 +97,7 @@ class urlExtension:
                     try:
                         href = ln['href']
                         for value in DW_VALUE:
-                            if value in href:                            
-                                # print href
+                            if value in href:                  
                                 string = href  
                     except KeyError: pass
         if webs[1] in string:
@@ -110,9 +108,8 @@ class urlExtension:
     
     def insertInList(self, string):
         linkExcept =  self.listOfExceptions(string)
-        self.linkList.append(linkExcept)
-        if self.commaList:
-            self.commaList.append(linkExcept)
+        self.linkList += '\n' + linkExcept
+        self.commaList += ',' + linkExcept
         
         
     def searchLink(self):
@@ -170,10 +167,10 @@ class main():
     forbidden = re.split(',', forbidden)
     
     synology = raw_input('Do you want to send links to synology: (Y/N) ')
-    if synology == 'Y':
+    if synology == 'Y' or synology == 'y':
         ip = raw_input('Input URL of Synology DiskStation: ')
         username = raw_input('Insert username of synology (You must have rights to DownloadStation): ')
-        password = base64.b64encode(raw_input('Input your password'))
+        password = base64.b64encode(raw_input('Input your password: '))
         syndata = {'ip': ip, 'username': username, 'password': password}
         u = urlExtension(url,extensions, forbidden, synology, syndata)
     else:
