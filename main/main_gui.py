@@ -28,6 +28,7 @@ import re
 import xerox
 from synology import synology
 import base64
+import requests
 
 class InvalidProtocol(Exception):
     def __init_(self, value):
@@ -62,6 +63,7 @@ class urlExtension:
         self.linkList = '' # list of links to Clipboard        
         self.syn = {}
         self.commaList = ''  # list of links to synlogoy
+        self.session = requests.session()
         if (syn == 'Y' or syn == 'y') and syndata:            
             self.syn = synology(syndata['ip'], syndata['username'], syndata['password'])
 
@@ -71,13 +73,13 @@ class urlExtension:
     def getPage(self, url):
         ''' Hace la peticion a la URL '''        
         
-        req = urllib2.Request(url)        
+        req = requests.get(url)    
         try:            
-            response = urllib2.urlopen(req)
-            return response.read()
-        except urllib2.URLError, e:            
+            response = req.content
+            return response
+        except:
             return False
-            print 'Error code: ', e.code
+            
             
             
     def listOfExceptions (self, string):
@@ -145,9 +147,9 @@ class urlExtension:
         try:
            xerox.copy(self.linkList)
            print 'Links copied on clipboard'
-           print self.linkList 
+           return self.commaList
         except XclipNotFound:
-            print self.linkList
+            return self.commaList
         
         if self.syn:
             self.syn.addDownload(self.commaList)
